@@ -564,3 +564,28 @@ XineramaScreenInfo* XineramaQueryScreens(Display *dpy, int *number) {
     return retval;
 }
 #endif
+
+/*
+	hardcoded for 2nd monitor to be primary (if it exists)
+	TODO: configuration, maybe constant in config.h?
+*/
+static RROutput (*_XRRGetOutputPrimary)(Display *dpy, Window window);
+RROutput XRRGetOutputPrimary(Display *dpy, Window window) {
+    XRRScreenResources* res = XRRGetScreenResources(dpy, window);
+    int num_connected = 0;
+    RROutput connected[res->noutput]; 
+    for (int i = 0; i < res->noutput; i++) {
+        XRROutputInfo* oinfo = XRRGetOutputInfo(dpy, res, res->outputs[i]);
+        if (oinfo->connection == RR_Connected) {
+            connected[num_connected] = res->outputs[i];
+            num_connected++;
+        }  
+
+        XRRFreeOutputInfo(oinfo);
+    }
+    if (num_connected > 1) {
+        return connected[1];
+    } else {
+        return connected[0];
+    }
+}
